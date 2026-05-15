@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #F8F9FA;
+  color: #1F2937;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-sabana-azul text-white px-6 py-3 rounded-xl font-semibold hover:bg-sabana-azul-hover transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-sabana-dorado text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all duration-200;
+  }
+  .btn-outline {
+    @apply border-2 border-sabana-azul text-sabana-azul px-6 py-3 rounded-xl font-semibold hover:bg-sabana-azul hover:text-white transition-all duration-200;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200;
+  }
+  .input-field {
+    @apply w-full border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sabana-azul focus:border-transparent transition-all duration-200;
+  }
+  .badge-nuevo {
+    @apply bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full;
+  }
+  .badge-usado {
+    @apply bg-orange-100 text-orange-700 text-xs font-semibold px-2 py-1 rounded-full;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
