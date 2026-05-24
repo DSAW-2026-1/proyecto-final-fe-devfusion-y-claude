@@ -36,10 +36,19 @@ function HomeContent() {
   const [pagina, setPagina] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [busqueda, setBusqueda] = useState(searchParams.get("q") || "");
+  const [busquedaDebounced, setBusquedaDebounced] = useState(busqueda);
   const [categoriaActiva, setCategoriaActiva] = useState(searchParams.get("categoria") || "Todos");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [precioMax, setPrecioMax] = useState("");
   const [heroSlide, setHeroSlide] = useState(0);
+
+  // Debounce: espera 400ms después de que el usuario deja de escribir
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBusquedaDebounced(busqueda);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [busqueda]);
 
   // Auto-avance del carrusel cada 5 segundos
   useEffect(() => {
@@ -53,7 +62,7 @@ function HomeContent() {
     setCargando(true);
     try {
       const params: any = { pagina: pag, limite: 12 };
-      if (busqueda) params.q = busqueda;
+      if (busquedaDebounced) params.q = busquedaDebounced;
       if (categoriaActiva !== "Todos") params.categoria = categoriaActiva;
       if (estadoFiltro) params.estado = estadoFiltro;
       if (precioMax) params.precioMax = precioMax;
@@ -67,8 +76,9 @@ function HomeContent() {
     } finally {
       setCargando(false);
     }
-  }, [busqueda, categoriaActiva, estadoFiltro, precioMax]);
+  }, [busquedaDebounced, categoriaActiva, estadoFiltro, precioMax]);
 
+  // Se ejecuta cada vez que cambia el debounce, categoría o filtros
   useEffect(() => { fetchProductos(1); }, [fetchProductos]);
 
   useEffect(() => {
@@ -78,7 +88,11 @@ function HomeContent() {
     if (cat) setCategoriaActiva(cat);
   }, [searchParams]);
 
-  const handleBuscar = (e: React.FormEvent) => { e.preventDefault(); fetchProductos(1); };
+  // El form ya no es necesario para buscar, pero lo dejamos para cuando presionan Enter
+  const handleBuscar = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusquedaDebounced(busqueda);
+  };
 
   const irAnterior = () => setHeroSlide(s => (s === 0 ? HERO_IMAGES.length - 1 : s - 1));
   const irSiguiente = () => setHeroSlide(s => (s === HERO_IMAGES.length - 1 ? 0 : s + 1));
@@ -88,7 +102,6 @@ function HomeContent() {
       {/* ── HERO CON CARRUSEL ── */}
       <section className="relative bg-sabana-azul overflow-hidden h-[420px] sm:h-[460px]">
 
-        {/* Imágenes del carrusel */}
         {HERO_IMAGES.map((src, i) => (
           <div
             key={i}
@@ -105,10 +118,8 @@ function HomeContent() {
           </div>
         ))}
 
-        {/* Overlay degradado */}
         <div className="absolute inset-0 bg-gradient-to-r from-sabana-azul/90 via-sabana-azul/70 to-sabana-azul/30 z-10" />
 
-        {/* Flecha izquierda */}
         <button
           onClick={irAnterior}
           className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all backdrop-blur-sm"
@@ -117,7 +128,6 @@ function HomeContent() {
           <ChevronLeft className="w-6 h-6" />
         </button>
 
-        {/* Flecha derecha */}
         <button
           onClick={irSiguiente}
           className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all backdrop-blur-sm"
@@ -126,7 +136,6 @@ function HomeContent() {
           <ChevronRight className="w-6 h-6" />
         </button>
 
-        {/* Puntos indicadores */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {HERO_IMAGES.map((_, i) => (
             <button
@@ -140,7 +149,6 @@ function HomeContent() {
           ))}
         </div>
 
-        {/* Contenido del hero */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-sabana-dorado/20 border border-sabana-dorado/40 text-sabana-dorado text-sm font-medium px-4 py-2 rounded-full mb-6">
@@ -205,7 +213,12 @@ function HomeContent() {
       {/* ── PRODUCTOS ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-wrap items-center gap-3 mb-6">
-          <span className="text-gray-500 text-sm">{total} resultados</span>
+          <span className="text-gray-500 text-sm">
+            {busquedaDebounced && (
+              <span>Resultados para <strong>"{busquedaDebounced}"</strong> — </span>
+            )}
+            {total} resultado{total !== 1 ? "s" : ""}
+          </span>
           <div className="flex items-center gap-3 ml-auto">
             <select
               value={estadoFiltro}
@@ -247,7 +260,9 @@ function HomeContent() {
         ) : productos.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No encontramos productos</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              {busquedaDebounced ? `No encontramos "${busquedaDebounced}"` : "No encontramos productos"}
+            </h3>
             <p className="text-gray-500 mb-6">Intenta con otros filtros o sé el primero en publicar.</p>
             <Link href="/publicar" className="btn-primary inline-flex items-center gap-2">
               Publicar producto <ArrowRight className="w-4 h-4" />
