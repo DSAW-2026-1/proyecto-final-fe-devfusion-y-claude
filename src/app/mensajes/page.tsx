@@ -31,7 +31,6 @@ export default function MensajesPage() {
       setConvs(prev => prev.filter(c => c._id !== convId));
       toast.success("Conversación eliminada");
     } catch (err: any) {
-      console.error("Error:", err.response?.data || err.message);
       toast.error("No se pudo eliminar la conversación");
     }
     setMenuAbierto(null);
@@ -41,13 +40,8 @@ export default function MensajesPage() {
   const toggleMenu = (e: React.MouseEvent, convId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (menuAbierto === convId) {
-      setMenuAbierto(null);
-      setConfirmando(null);
-    } else {
-      setMenuAbierto(convId);
-      setConfirmando(null);
-    }
+    setMenuAbierto(prev => prev === convId ? null : convId);
+    setConfirmando(null);
   };
 
   const iniciarConfirmacion = (e: React.MouseEvent, convId: string) => {
@@ -64,7 +58,10 @@ export default function MensajesPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10" onClick={() => { setMenuAbierto(null); setConfirmando(null); }}>
+    <div
+      className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+      onClick={() => { setMenuAbierto(null); setConfirmando(null); }}
+    >
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Mensajes</h1>
       {cargandoConvs ? (
         <div className="space-y-3">{[1,2,3,4].map((i) => <div key={i} className="card h-20 animate-pulse" />)}</div>
@@ -133,7 +130,7 @@ export default function MensajesPage() {
 
                   {esteMenuAbierto && (
                     <div
-                      className="absolute right-0 bottom-10 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 w-48"
+                      className="absolute right-8 top-0 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 w-48"
                       onClick={e => e.stopPropagation()}
                     >
                       {!estaConfirmando ? (
