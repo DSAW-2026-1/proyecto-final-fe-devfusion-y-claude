@@ -15,7 +15,6 @@ export default function MensajesPage() {
   const [cargandoConvs, setCargandoConvs] = useState(true);
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState<string | null>(null);
-  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => { if (!cargando && !usuario) router.push("/login"); }, [usuario, cargando]);
 
@@ -24,25 +23,11 @@ export default function MensajesPage() {
     api.get("/chat").then(({ data }) => setConvs(data)).finally(() => setCargandoConvs(false));
   }, [usuario]);
 
-  // Cerrar menú al hacer click fuera
-  useEffect(() => {
-    if (!menuAbierto) return;
-    const handleClickFuera = (e: MouseEvent) => {
-      const ref = menuRefs.current[menuAbierto];
-      if (ref && !ref.contains(e.target as Node)) {
-        setMenuAbierto(null);
-        setConfirmando(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickFuera);
-    return () => document.removeEventListener("mousedown", handleClickFuera);
-  }, [menuAbierto]);
-
-  const handleEliminarChat = async (convId: string) => {
-    console.log("Eliminando conv:", convId);
+  const handleEliminarChat = async (convId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-      const res = await api.delete(`/chat/${convId}`);
-      console.log("Respuesta:", res);
+      await api.delete(`/chat/${convId}`);
       setConvs(prev => prev.filter(c => c._id !== convId));
       toast.success("Conversación eliminada");
     } catch (err: any) {
@@ -53,8 +38,33 @@ export default function MensajesPage() {
     setConfirmando(null);
   };
 
+  const toggleMenu = (e: React.MouseEvent, convId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (menuAbierto === convId) {
+      setMenuAbierto(null);
+      setConfirmando(null);
+    } else {
+      setMenuAbierto(convId);
+      setConfirmando(null);
+    }
+  };
+
+  const iniciarConfirmacion = (e: React.MouseEvent, convId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmando(convId);
+  };
+
+  const cancelarConfirmacion = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmando(null);
+    setMenuAbierto(null);
+  };
+
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10" onClick={() => { setMenuAbierto(null); setConfirmando(null); }}>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Mensajes</h1>
       {cargandoConvs ? (
         <div className="space-y-3">{[1,2,3,4].map((i) => <div key={i} className="card h-20 animate-pulse" />)}</div>
@@ -77,9 +87,10 @@ export default function MensajesPage() {
             return (
               <div
                 key={conv._id}
-                className={`card p-4 flex items-center gap-4 hover:shadow-md transition-all ${tieneNoLeidos ? "border-l-4 border-sabana-azul" : ""}`}
+                className={`card p-4 flex items-center gap-4 hover:shadow-md transition-all relative ${tieneNoLeidos ? "border-l-4 border-sabana-azul" : ""}`}
+                onClick={e => e.stopPropagation()}
               >
-                {/* Avatar + link */}
+                {/* Link al chat */}
                 <Link href={`/mensajes/${conv._id}`} className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-sabana-azul flex items-center justify-center text-white font-bold text-lg overflow-hidden">
@@ -112,42 +123,38 @@ export default function MensajesPage() {
                 </Link>
 
                 {/* Tres puntos */}
-                <div
-                  className="relative flex-shrink-0"
-                  ref={el => { menuRefs.current[conv._id] = el; }}
-                >
+                <div className="relative flex-shrink-0">
                   <button
-                    onMouseDown={e => {
-                      e.stopPropagation();
-                      setMenuAbierto(esteMenuAbierto ? null : conv._id);
-                      setConfirmando(null);
-                    }}
+                    onClick={e => toggleMenu(e, conv._id)}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <MoreVertical className="w-4 h-4" />
                   </button>
 
                   {esteMenuAbierto && (
-                    <div className="absolute right-0 top-9 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 w-44">
+                    <div
+                      className="absolute right-0 bottom-10 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 w-48"
+                      onClick={e => e.stopPropagation()}
+                    >
                       {!estaConfirmando ? (
                         <button
-                          onMouseDown={() => setConfirmando(conv._id)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 w-full"
+                          onClick={e => iniciarConfirmacion(e, conv._id)}
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 w-full"
                         >
                           <Trash2 className="w-4 h-4" /> Eliminar chat
                         </button>
                       ) : (
-                        <div className="px-3 py-2">
-                          <p className="text-xs text-gray-600 mb-2 font-medium">¿Eliminar esta conversación?</p>
+                        <div className="px-3 py-2.5">
+                          <p className="text-xs text-gray-600 mb-2.5 font-medium">¿Eliminar esta conversación?</p>
                           <div className="flex gap-2">
                             <button
-                              onMouseDown={() => handleEliminarChat(conv._id)}
+                              onClick={e => handleEliminarChat(conv._id, e)}
                               className="flex-1 bg-red-500 text-white text-xs py-1.5 rounded-lg font-medium hover:bg-red-600 transition-colors"
                             >
                               Eliminar
                             </button>
                             <button
-                              onMouseDown={() => { setConfirmando(null); setMenuAbierto(null); }}
+                              onClick={cancelarConfirmacion}
                               className="flex-1 bg-gray-100 text-gray-600 text-xs py-1.5 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                             >
                               Cancelar
