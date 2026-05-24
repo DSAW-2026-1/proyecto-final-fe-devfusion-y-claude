@@ -163,7 +163,7 @@ export default function MensajesPage() {
 
                     {esteMenuAbierto && (
                       <div
-                        className="absolute right-0 top-9 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 w-44"
+                        className="absolute left-full top-0 ml-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 w-44"
                         onClick={e => e.stopPropagation()}
                       >
                         <button
