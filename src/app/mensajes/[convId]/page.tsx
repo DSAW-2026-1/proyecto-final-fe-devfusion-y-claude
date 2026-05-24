@@ -22,6 +22,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
   const [textoEditar, setTextoEditar] = useState("");
   const contenedorRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => { if (!cargando && !usuario) router.push("/login"); }, [usuario, cargando]);
 
@@ -60,12 +61,18 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [usuario, convId, fetchMensajes, scrollAlFondo]);
 
-  // Cerrar menú al hacer click fuera
+  // Cerrar menú al hacer click fuera del menú abierto
   useEffect(() => {
-    const handleClick = () => setMenuAbierto(null);
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
+    if (!menuAbierto) return;
+    const handleClickFuera = (e: MouseEvent) => {
+      const ref = menuRefs.current[menuAbierto];
+      if (ref && !ref.contains(e.target as Node)) {
+        setMenuAbierto(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickFuera);
+    return () => document.removeEventListener("mousedown", handleClickFuera);
+  }, [menuAbierto]);
 
   const handleEnviar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +142,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
           )}
         </div>
 
-        {/* Producto activo */}
+        {/* Producto */}
         {primerProducto && (
           <div className="bg-blue-50 px-4 py-2 border-b border-blue-100 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 bg-gray-100">
@@ -159,6 +166,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
           {mensajes.map((m) => {
             const esMio = m.emisor?._id === usuario?.id || m.emisor === usuario?.id;
             const estaEditando = editando === m._id;
+            const esteMenuAbierto = menuAbierto === m._id;
 
             return (
               <div key={m._id} className={`flex items-end gap-2 ${esMio ? "flex-row-reverse" : "flex-row"}`}>
@@ -174,16 +182,23 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
                   {/* Burbuja */}
                   <div className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm shadow-sm ${esMio ? "bg-sabana-azul text-white rounded-br-md" : "bg-white text-gray-800 rounded-bl-md"}`}>
                     {estaEditando ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-48">
                         <input
                           autoFocus
                           value={textoEditar}
                           onChange={e => setTextoEditar(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") handleEditar(m._id); if (e.key === "Escape") setEditando(null); }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleEditar(m._id);
+                            if (e.key === "Escape") setEditando(null);
+                          }}
                           className="text-gray-900 text-sm rounded-lg px-2 py-1 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-sabana-azul w-full"
                         />
-                        <button onClick={() => handleEditar(m._id)} className="text-green-400 hover:text-green-300 flex-shrink-0"><Check className="w-4 h-4" /></button>
-                        <button onClick={() => setEditando(null)} className="text-red-400 hover:text-red-300 flex-shrink-0"><X className="w-4 h-4" /></button>
+                        <button onClick={() => handleEditar(m._id)} className="text-green-400 hover:text-green-300 flex-shrink-0">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setEditando(null)} className="text-red-400 hover:text-red-300 flex-shrink-0">
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     ) : (
                       <>
@@ -198,25 +213,31 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
                     )}
                   </div>
 
-                  {/* Tres puntos — solo en mis mensajes */}
+                  {/* Tres puntos — solo mis mensajes */}
                   {esMio && !estaEditando && (
-                    <div className="relative flex-shrink-0 mb-1">
+                    <div
+                      className="relative flex-shrink-0 mb-1"
+                      ref={el => { menuRefs.current[m._id] = el; }}
+                    >
                       <button
-                        onClick={e => { e.stopPropagation(); setMenuAbierto(menuAbierto === m._id ? null : m._id); }}
+                        onMouseDown={e => {
+                          e.stopPropagation();
+                          setMenuAbierto(esteMenuAbierto ? null : m._id);
+                        }}
                         className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
-                      {menuAbierto === m._id && (
+                      {esteMenuAbierto && (
                         <div className="absolute bottom-7 right-0 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 w-32">
                           <button
-                            onClick={() => iniciarEdicion(m)}
+                            onMouseDown={() => iniciarEdicion(m)}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
                           >
                             <Pencil className="w-3.5 h-3.5 text-sabana-azul" /> Editar
                           </button>
                           <button
-                            onClick={() => handleEliminar(m._id)}
+                            onMouseDown={() => handleEliminar(m._id)}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 w-full"
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Eliminar
