@@ -86,7 +86,7 @@ function HomeContent() {
   return (
     <div>
       {/* ── HERO CON CARRUSEL ── */}
-      <section className="relative bg-sabana-azul overflow-hidden h-[560px] sm:h-[620px]">
+      <section className="relative bg-sabana-azul overflow-hidden h-[420px] sm:h-[460px]">
 
         {/* Imágenes del carrusel */}
         {HERO_IMAGES.map((src, i) => (
