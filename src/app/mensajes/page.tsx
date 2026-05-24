@@ -39,11 +39,14 @@ export default function MensajesPage() {
   }, [menuAbierto]);
 
   const handleEliminarChat = async (convId: string) => {
+    console.log("Eliminando conv:", convId);
     try {
-      await api.delete(`/chat/${convId}`);
+      const res = await api.delete(`/chat/${convId}`);
+      console.log("Respuesta:", res);
       setConvs(prev => prev.filter(c => c._id !== convId));
       toast.success("Conversación eliminada");
-    } catch {
+    } catch (err: any) {
+      console.error("Error:", err.response?.data || err.message);
       toast.error("No se pudo eliminar la conversación");
     }
     setMenuAbierto(null);
