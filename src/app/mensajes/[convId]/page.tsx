@@ -18,29 +18,58 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const contenedorRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const esPrimeraCarga = useRef(true);
 
   useEffect(() => { if (!cargando && !usuario) router.push("/login"); }, [usuario, cargando]);
+
+  // Verifica si el usuario está cerca del fondo del chat
+  const estaAlFondo = useCallback(() => {
+    const contenedor = contenedorRef.current;
+    if (!contenedor) return true;
+    const distanciaAlFondo = contenedor.scrollHeight - contenedor.scrollTop - contenedor.clientHeight;
+    return distanciaAlFondo < 80;
+  }, []);
+
+  const scrollAlFondo = useCallback((forzar = false) => {
+    if (forzar || estaAlFondo()) {
+      bottomRef.current?.scrollIntoView({ behavior: forzar ? "auto" : "smooth" });
+    }
+  }, [estaAlFondo]);
 
   const fetchMensajes = useCallback(async () => {
     try {
       const { data } = await api.get(`/chat/${convId}/mensajes`);
-      setMensajes(data);
+      setMensajes(prev => {
+        // Solo hace scroll si llegaron mensajes nuevos y el usuario está al fondo
+        if (data.length > prev.length) {
+          setTimeout(() => scrollAlFondo(false), 50);
+        }
+        return data;
+      });
     } catch {}
-  }, [convId]);
+  }, [convId, scrollAlFondo]);
 
   useEffect(() => {
     if (!usuario) return;
-    api.get(`/chat/${convId}/mensajes`).then(({ data }) => setMensajes(data)).catch(() => { toast.error("Conversación no encontrada"); router.push("/mensajes"); });
+    api.get(`/chat/${convId}/mensajes`)
+      .then(({ data }) => {
+        setMensajes(data);
+        // Primera carga: scroll forzado al fondo sin animación
+        setTimeout(() => scrollAlFondo(true), 100);
+        esPrimeraCarga.current = false;
+      })
+      .catch(() => { toast.error("Conversación no encontrada"); router.push("/mensajes"); });
+
     api.get("/chat").then(({ data }) => {
       const c = data.find((c: any) => c._id === convId);
       if (c) setConv(c);
     });
+
     intervalRef.current = setInterval(fetchMensajes, 3000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [usuario, convId, fetchMensajes]);
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [mensajes]);
+  }, [usuario, convId, fetchMensajes, scrollAlFondo]);
 
   const handleEnviar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +79,8 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
       const { data } = await api.post(`/chat/${convId}/mensajes`, { texto });
       setMensajes((prev) => [...prev, data]);
       setTexto("");
+      // Scroll forzado solo cuando el usuario envía un mensaje
+      setTimeout(() => scrollAlFondo(true), 50);
     } catch { toast.error("Error al enviar mensaje"); }
     finally { setEnviando(false); }
   };
@@ -92,7 +123,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+        <div ref={contenedorRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
           {mensajes.length === 0 && (
             <div className="text-center text-gray-400 text-sm py-8">Inicia la conversación 👋</div>
           )}
