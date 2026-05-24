@@ -14,6 +14,7 @@ export default function MensajesPage() {
   const [cargandoConvs, setCargandoConvs] = useState(true);
 
   useEffect(() => { if (!cargando && !usuario) router.push("/login"); }, [usuario, cargando]);
+
   useEffect(() => {
     if (!usuario) return;
     api.get("/chat").then(({ data }) => setConvs(data)).finally(() => setCargandoConvs(false));
@@ -36,18 +37,38 @@ export default function MensajesPage() {
           {convs.map((conv) => {
             const esComprador = conv.comprador?._id === usuario?.id;
             const otro = esComprador ? conv.vendedor : conv.comprador;
+            const tieneNoLeidos = conv.noLeidos > 0;
             return (
-              <Link key={conv._id} href={`/mensajes/${conv._id}`} className="card p-4 flex items-center gap-4 hover:shadow-md transition-all">
-                <div className="w-12 h-12 rounded-full bg-sabana-azul flex items-center justify-center text-white font-bold text-lg overflow-hidden flex-shrink-0">
-                  {otro?.foto ? <Image src={otro.foto} alt={otro.nombre} width={48} height={48} className="object-cover w-full h-full" /> : otro?.nombre?.charAt(0).toUpperCase()}
+              <Link
+                key={conv._id}
+                href={`/mensajes/${conv._id}`}
+                className={`card p-4 flex items-center gap-4 hover:shadow-md transition-all ${tieneNoLeidos ? "border-l-4 border-sabana-azul" : ""}`}
+              >
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-sabana-azul flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    {otro?.foto ? <Image src={otro.foto} alt={otro.nombre} width={48} height={48} className="object-cover w-full h-full" /> : otro?.nombre?.charAt(0).toUpperCase()}
+                  </div>
+                  {tieneNoLeidos && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                      {conv.noLeidos > 9 ? "9+" : conv.noLeidos}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-semibold text-gray-900 truncate">{otro?.nombre}</p>
-                    <p className="text-gray-400 text-xs flex-shrink-0">{new Date(conv.ultimaActividad).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</p>
+                    <p className={`truncate ${tieneNoLeidos ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
+                      {otro?.nombre}
+                    </p>
+                    <p className="text-gray-400 text-xs flex-shrink-0 ml-2">
+                      {new Date(conv.ultimaActividad).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+                    </p>
                   </div>
                   <p className="text-gray-500 text-sm truncate">{conv.producto?.nombre}</p>
-                  {conv.ultimoMensaje && <p className="text-gray-400 text-xs truncate mt-0.5">{conv.ultimoMensaje}</p>}
+                  {conv.ultimoMensaje && (
+                    <p className={`text-xs truncate mt-0.5 ${tieneNoLeidos ? "font-semibold text-gray-700" : "text-gray-400"}`}>
+                      {conv.ultimoMensaje}
+                    </p>
+                  )}
                 </div>
               </Link>
             );
