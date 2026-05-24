@@ -17,14 +17,11 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
   const [mensajes, setMensajes] = useState<any[]>([]);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const esPrimeraCarga = useRef(true);
 
   useEffect(() => { if (!cargando && !usuario) router.push("/login"); }, [usuario, cargando]);
 
-  // Verifica si el usuario está cerca del fondo del chat
   const estaAlFondo = useCallback(() => {
     const contenedor = contenedorRef.current;
     if (!contenedor) return true;
@@ -33,8 +30,10 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
   }, []);
 
   const scrollAlFondo = useCallback((forzar = false) => {
+    const contenedor = contenedorRef.current;
+    if (!contenedor) return;
     if (forzar || estaAlFondo()) {
-      bottomRef.current?.scrollIntoView({ behavior: forzar ? "auto" : "smooth" });
+      contenedor.scrollTop = contenedor.scrollHeight;
     }
   }, [estaAlFondo]);
 
@@ -42,7 +41,6 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
     try {
       const { data } = await api.get(`/chat/${convId}/mensajes`);
       setMensajes(prev => {
-        // Solo hace scroll si llegaron mensajes nuevos y el usuario está al fondo
         if (data.length > prev.length) {
           setTimeout(() => scrollAlFondo(false), 50);
         }
@@ -56,9 +54,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
     api.get(`/chat/${convId}/mensajes`)
       .then(({ data }) => {
         setMensajes(data);
-        // Primera carga: scroll forzado al fondo sin animación
         setTimeout(() => scrollAlFondo(true), 100);
-        esPrimeraCarga.current = false;
       })
       .catch(() => { toast.error("Conversación no encontrada"); router.push("/mensajes"); });
 
@@ -79,7 +75,6 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
       const { data } = await api.post(`/chat/${convId}/mensajes`, { texto });
       setMensajes((prev) => [...prev, data]);
       setTexto("");
-      // Scroll forzado solo cuando el usuario envía un mensaje
       setTimeout(() => scrollAlFondo(true), 50);
     } catch { toast.error("Error al enviar mensaje"); }
     finally { setEnviando(false); }
@@ -145,7 +140,6 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
               </div>
             );
           })}
-          <div ref={bottomRef} />
         </div>
 
         <form onSubmit={handleEnviar} className="p-4 bg-white border-t border-gray-100 flex gap-3">
