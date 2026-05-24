@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, BookOpen, Laptop, Shirt, Dumbbell, Coffee, Briefcase, Tag, ArrowRight } from "lucide-react";
+import { Search, BookOpen, Laptop, Shirt, Dumbbell, Coffee, Briefcase, Tag, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import ProductCard from "@/components/ui/ProductCard";
 import { useSearchParams } from "next/navigation";
@@ -18,6 +18,16 @@ const CATEGORIAS = [
   { nombre: "Otros", icono: Tag },
 ];
 
+const HERO_IMAGES = [
+  "/images/campus-1.jpg",
+  "/images/campus-2.jpg",
+  "/images/campus-3.jpg",
+  "/images/campus-4.jpg",
+  "/images/campus-5.jpg",
+  "/images/campus-6.jpg",
+  "/images/campus-7.jpg",
+];
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const [productos, setProductos] = useState<any[]>([]);
@@ -29,6 +39,15 @@ function HomeContent() {
   const [categoriaActiva, setCategoriaActiva] = useState(searchParams.get("categoria") || "Todos");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [precioMax, setPrecioMax] = useState("");
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  // Auto-avance del carrusel cada 5 segundos
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroSlide(s => (s === HERO_IMAGES.length - 1 ? 0 : s + 1));
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchProductos = useCallback(async (pag = 1) => {
     setCargando(true);
@@ -51,6 +70,7 @@ function HomeContent() {
   }, [busqueda, categoriaActiva, estadoFiltro, precioMax]);
 
   useEffect(() => { fetchProductos(1); }, [fetchProductos]);
+
   useEffect(() => {
     const q = searchParams.get("q");
     const cat = searchParams.get("categoria");
@@ -60,15 +80,68 @@ function HomeContent() {
 
   const handleBuscar = (e: React.FormEvent) => { e.preventDefault(); fetchProductos(1); };
 
+  const irAnterior = () => setHeroSlide(s => (s === 0 ? HERO_IMAGES.length - 1 : s - 1));
+  const irSiguiente = () => setHeroSlide(s => (s === HERO_IMAGES.length - 1 ? 0 : s + 1));
+
   return (
     <div>
-      <section className="relative bg-sabana-azul overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <Image src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&h=600&fit=crop&q=80"
-            alt="Universidad de La Sabana campus" fill className="object-cover" priority />
+      {/* ── HERO CON CARRUSEL ── */}
+      <section className="relative bg-sabana-azul overflow-hidden h-[560px] sm:h-[620px]">
+
+        {/* Imágenes del carrusel */}
+        {HERO_IMAGES.map((src, i) => (
+          <div
+            key={i}
+            className="absolute inset-0 transition-opacity duration-1000"
+            style={{ opacity: heroSlide === i ? 1 : 0 }}
+          >
+            <Image
+              src={src}
+              alt={`Campus Universidad de La Sabana ${i + 1}`}
+              fill
+              className="object-cover"
+              priority={i === 0}
+            />
+          </div>
+        ))}
+
+        {/* Overlay degradado */}
+        <div className="absolute inset-0 bg-gradient-to-r from-sabana-azul/90 via-sabana-azul/70 to-sabana-azul/30 z-10" />
+
+        {/* Flecha izquierda */}
+        <button
+          onClick={irAnterior}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all backdrop-blur-sm"
+          aria-label="Imagen anterior"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        {/* Flecha derecha */}
+        <button
+          onClick={irSiguiente}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all backdrop-blur-sm"
+          aria-label="Imagen siguiente"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
+        {/* Puntos indicadores */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {HERO_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setHeroSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                heroSlide === i ? "bg-white w-6" : "bg-white/50 w-2"
+              }`}
+              aria-label={`Ir a imagen ${i + 1}`}
+            />
+          ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-sabana-azul via-sabana-azul/90 to-sabana-azul/70" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+
+        {/* Contenido del hero */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-sabana-dorado/20 border border-sabana-dorado/40 text-sabana-dorado text-sm font-medium px-4 py-2 rounded-full mb-6">
               <span className="w-2 h-2 bg-sabana-dorado rounded-full animate-pulse" />
@@ -84,16 +157,22 @@ function HomeContent() {
             <form onSubmit={handleBuscar} className="flex gap-3 max-w-lg">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+                <input
+                  type="text"
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
                   placeholder="¿Qué estás buscando?"
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-sabana-dorado shadow-lg" />
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-sabana-dorado shadow-lg"
+                />
               </div>
               <button type="submit" className="bg-sabana-dorado text-white px-6 py-4 rounded-2xl font-semibold hover:opacity-90 transition-all shadow-lg whitespace-nowrap">
                 Buscar
               </button>
             </form>
             <div className="flex items-center gap-6 mt-8 text-blue-200 text-sm">
-              <span className="flex items-center gap-2"><span className="text-sabana-dorado font-bold text-lg">{total}+</span> productos</span>
+              <span className="flex items-center gap-2">
+                <span className="text-sabana-dorado font-bold text-lg">{total}+</span> productos
+              </span>
               <span className="w-1 h-1 bg-blue-400 rounded-full" />
               <span>100% comunidad universitaria</span>
               <span className="w-1 h-1 bg-blue-400 rounded-full" />
@@ -103,14 +182,18 @@ function HomeContent() {
         </div>
       </section>
 
+      {/* ── CATEGORÍAS ── */}
       <section className="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 overflow-x-auto py-3 scrollbar-hide">
             {CATEGORIAS.map(({ nombre, icono: Icono }) => (
-              <button key={nombre} onClick={() => setCategoriaActiva(nombre)}
+              <button
+                key={nombre}
+                onClick={() => setCategoriaActiva(nombre)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
                   categoriaActiva === nombre ? "bg-sabana-azul text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}>
+                }`}
+              >
                 <Icono className="w-4 h-4" />
                 {nombre}
               </button>
@@ -119,18 +202,25 @@ function HomeContent() {
         </div>
       </section>
 
+      {/* ── PRODUCTOS ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <span className="text-gray-500 text-sm">{total} resultados</span>
           <div className="flex items-center gap-3 ml-auto">
-            <select value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sabana-azul bg-white">
+            <select
+              value={estadoFiltro}
+              onChange={(e) => setEstadoFiltro(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sabana-azul bg-white"
+            >
               <option value="">Todos los estados</option>
               <option value="nuevo">Nuevo</option>
               <option value="usado">Usado</option>
             </select>
-            <select value={precioMax} onChange={(e) => setPrecioMax(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sabana-azul bg-white">
+            <select
+              value={precioMax}
+              onChange={(e) => setPrecioMax(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sabana-azul bg-white"
+            >
               <option value="">Cualquier precio</option>
               <option value="20000">Hasta $20.000</option>
               <option value="50000">Hasta $50.000</option>
@@ -170,18 +260,29 @@ function HomeContent() {
             </div>
             {totalPaginas > 1 && (
               <div className="flex justify-center items-center gap-2 mt-10">
-                <button disabled={pagina === 1} onClick={() => fetchProductos(pagina - 1)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors">
+                <button
+                  disabled={pagina === 1}
+                  onClick={() => fetchProductos(pagina - 1)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
                   Anterior
                 </button>
                 {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((p) => (
-                  <button key={p} onClick={() => fetchProductos(p)}
-                    className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${p === pagina ? "bg-sabana-azul text-white" : "border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                  <button
+                    key={p}
+                    onClick={() => fetchProductos(p)}
+                    className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
+                      p === pagina ? "bg-sabana-azul text-white" : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
                     {p}
                   </button>
                 ))}
-                <button disabled={pagina === totalPaginas} onClick={() => fetchProductos(pagina + 1)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors">
+                <button
+                  disabled={pagina === totalPaginas}
+                  onClick={() => fetchProductos(pagina + 1)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
                   Siguiente
                 </button>
               </div>
