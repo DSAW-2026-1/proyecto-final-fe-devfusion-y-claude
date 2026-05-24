@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import type { Metadata } from "next";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -36,15 +35,13 @@ export default function LoginPage() {
       {/* Panel izquierdo - imagen */}
       <div className="hidden lg:flex lg:w-1/2 bg-sabana-azul relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">
-          <Image src="https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=800&h=1000&fit=crop" alt="Campus" fill className="object-cover" />
+          <Image src="/images/campus-1.jpg" alt="Campus Universidad de La Sabana" fill className="object-cover" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-sabana-azul via-sabana-azul/70 to-transparent" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
-              <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Escudo_Universidad_de_La_Sabana.svg/200px-Escudo_Universidad_de_La_Sabana.svg.png"
-                alt="Logo" width={44} height={44} className="object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <Image src="/images/logo-unisabana.jpg" alt="Logo Unisabana" width={44} height={44} className="object-contain" />
             </div>
             <div>
               <p className="font-bold text-xl">UnisabanaMarket</p>
@@ -61,9 +58,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-sabana-azul rounded-full flex items-center justify-center overflow-hidden">
-              <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Escudo_Universidad_de_La_Sabana.svg/200px-Escudo_Universidad_de_La_Sabana.svg.png"
-                alt="Logo" width={36} height={36} className="object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <Image src="/images/logo-unisabana.jpg" alt="Logo Unisabana" width={36} height={36} className="object-contain" />
             </div>
             <span className="font-bold text-sabana-azul text-xl">UnisabanaMarket</span>
           </div>

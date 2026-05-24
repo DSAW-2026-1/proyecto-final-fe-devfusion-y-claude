@@ -51,7 +51,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
               <Image
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Escudo_Universidad_de_La_Sabana.svg/200px-Escudo_Universidad_de_La_Sabana.svg.png"
+                src="/images/logo-unisabana.jpg"
                 alt="Logo Unisabana" width={36} height={36} className="object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />

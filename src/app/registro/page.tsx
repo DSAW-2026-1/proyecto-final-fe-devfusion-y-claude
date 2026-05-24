@@ -47,7 +47,7 @@ export default function RegistroPage() {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
-              <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Escudo_Universidad_de_La_Sabana.svg/200px-Escudo_Universidad_de_La_Sabana.svg.png"
+              <Image src="/images/logo-unisabana.jpg"
                 alt="Logo" width={44} height={44} className="object-contain"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             </div>
