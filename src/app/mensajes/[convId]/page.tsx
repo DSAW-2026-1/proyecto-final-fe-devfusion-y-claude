@@ -195,7 +195,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
                 </div>
               )}
               <div className={`flex items-end gap-1 ${esMio ? "flex-row-reverse" : "flex-row"}`}>
-                <div className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm shadow-sm break-words min-w-0 ${esMio ? "bg-sabana-azul text-white rounded-br-md" : "bg-white text-gray-800 rounded-bl-md"}`}>
+                <div className={`max-w-[65vw] px-4 py-2.5 rounded-2xl text-sm shadow-sm break-words min-w-0 ${esMio ? "bg-sabana-azul text-white rounded-br-md" : "bg-white text-gray-800 rounded-bl-md"}`}>
                   {estaEditando ? (
                     <div className="flex items-center gap-2 min-w-48">
                       <input autoFocus value={textoEditar} onChange={e => setTextoEditar(e.target.value)}
