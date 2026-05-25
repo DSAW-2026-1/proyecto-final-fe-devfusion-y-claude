@@ -179,7 +179,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
       )}
 
       {/* Mensajes */}
-      <div ref={contenedorRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+      <div ref={contenedorRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 min-w-0 w-full">
         {mensajes.length === 0 && (
           <div className="text-center text-gray-400 text-sm py-8">Inicia la conversación 👋</div>
         )}
@@ -333,7 +333,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
       </div>
 
       {/* Móvil: solo el chat */}
-      <div className="lg:hidden fixed inset-0 top-16 flex flex-col bg-white z-40">
+      <div className="lg:hidden fixed inset-0 top-16 flex flex-col bg-white z-40 overflow-hidden">
         {PanelChat}
       </div>
     </>
