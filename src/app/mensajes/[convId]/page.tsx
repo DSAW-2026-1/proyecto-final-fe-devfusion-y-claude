@@ -333,7 +333,7 @@ export default function ChatPage({ params }: { params: Promise<{ convId: string 
       </div>
 
       {/* Móvil: solo el chat */}
-      <div className="lg:hidden h-[calc(100vh-64px)] flex flex-col">
+      <div className="lg:hidden fixed inset-0 top-16 flex flex-col bg-white z-40">
         {PanelChat}
       </div>
     </>
